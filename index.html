@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Habit Quest</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #0f0f1a;
+    color: #e0e0e0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 80px;
+  }
+
+  /* ---- TABS ---- */
+  .tab-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 60px;
+    background: #12121f;
+    border-top: 1px solid #2a2a44;
+    display: flex;
+    z-index: 50;
+  }
+
+  .tab-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    color: #606080;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    transition: color 0.15s;
+  }
+
+  .tab-btn.active { color: #c8a84b; }
+
+  .tab-btn svg { width: 22px; height: 22px; }
+
+  /* ---- PAGES ---- */
+  .page { display: none; width: 100%; max-width: 500px; }
+  .page.active { display: block; }
+
+  /* ---- TODAY PAGE ---- */
+  header {
+    text-align: center;
+    margin-bottom: 24px;
+    width: 100%;
+  }
+
+  h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: #c8a84b;
+    margin-bottom: 8px;
+  }
+
+  .points-display { font-size: 1.1rem; color: #a0a0b0; margin-bottom: 6px; }
+  .points-display span { color: #f0c040; font-weight: 700; font-size: 1.3rem; }
+
+  .timer { font-size: 0.95rem; color: #606080; height: 20px; }
+  .timer.active { color: #70b8ff; }
+  .timer.urgent { color: #ff7060; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    width: 100%;
+  }
+
+  .card {
+    background: #1a1a2e;
+    border: 2px solid #2a2a44;
+    border-radius: 12px;
+    padding: 16px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    transition: border-color 0.2s, background 0.2s;
+    min-height: 110px;
+    justify-content: center;
+  }
+
+  .card.checked { background: #0d2e1a; border-color: #2ecc71; }
+
+  .skill-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 4px;
+    line-height: 1.3;
+    word-break: break-all;
+    color: #d0d0e8;
+  }
+
+  .skill-name:hover { background: #2a2a44; }
+  .card.checked .skill-name { color: #7ee8a2; }
+
+  .skill-input {
+    width: 100%;
+    background: #2a2a44;
+    border: 1px solid #4a4a70;
+    border-radius: 4px;
+    color: #e0e0f0;
+    font-size: 0.85rem;
+    padding: 4px 6px;
+    text-align: center;
+    outline: none;
+  }
+
+  .check-btn {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    border: 2px solid #3a3a5a;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+
+  .check-btn:hover { border-color: #6a6aaa; background: #2a2a44; }
+  .card.checked .check-btn { background: #2ecc71; border-color: #2ecc71; }
+  .check-btn svg { width: 20px; height: 20px; }
+
+  .progress-bar-wrap {
+    width: 100%;
+    background: #1a1a2e;
+    border-radius: 8px;
+    height: 8px;
+    margin-top: 20px;
+    overflow: hidden;
+  }
+
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #2ecc71, #00d2ff);
+    border-radius: 8px;
+    transition: width 0.3s;
+  }
+
+  .progress-label {
+    text-align: right;
+    font-size: 0.8rem;
+    color: #606080;
+    margin-top: 4px;
+  }
+
+  /* ---- DASHBOARD PAGE ---- */
+  .dash-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #c8a84b;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  .stat-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    background: #1a1a2e;
+    border: 1px solid #2a2a44;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+  }
+
+  .stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #f0c040;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+    color: #606080;
+  }
+
+  .section-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #a0a0c0;
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+  }
+
+  /* Score bar chart */
+  .chart-wrap {
+    background: #1a1a2e;
+    border: 1px solid #2a2a44;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+
+  .bar-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 80px;
+  }
+
+  .bar-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    height: 100%;
+    justify-content: flex-end;
+  }
+
+  .bar-fill {
+    width: 100%;
+    border-radius: 3px 3px 0 0;
+    min-height: 2px;
+    transition: height 0.3s;
+  }
+
+  .bar-label {
+    font-size: 0.55rem;
+    color: #505060;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .chart-80-line {
+    position: relative;
+  }
+
+  /* Skill rate bars */
+  .skill-rate-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .skill-rate-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .skill-rate-name {
+    font-size: 0.8rem;
+    color: #a0a0c0;
+    width: 72px;
+    flex-shrink: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .skill-rate-bar-bg {
+    flex: 1;
+    background: #2a2a3a;
+    border-radius: 4px;
+    height: 10px;
+    overflow: hidden;
+  }
+
+  .skill-rate-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #a29bfe, #00d2ff);
+    transition: width 0.4s;
+  }
+
+  .skill-rate-pct {
+    font-size: 0.75rem;
+    color: #606080;
+    width: 32px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  /* ---- CELEBRATION ---- */
+  .celebration {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .celebration.show { display: flex; }
+
+  .celebration-text {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #f0c040;
+    text-align: center;
+    animation: pop 0.4s ease;
+  }
+
+  .celebration-sub { color: #a0a0c0; font-size: 1rem; }
+
+  .celebration-btn {
+    margin-top: 12px;
+    padding: 12px 32px;
+    background: #c8a84b;
+    color: #0f0f1a;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .confetti-piece {
+    position: fixed;
+    border-radius: 2px;
+    animation: fall linear forwards;
+    pointer-events: none;
+    z-index: 101;
+  }
+
+  @keyframes fall {
+    0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
+
+  @keyframes pop {
+    0%   { transform: scale(0.5); opacity: 0; }
+    80%  { transform: scale(1.1); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .no-data { color: #404060; font-size: 0.85rem; text-align: center; padding: 20px 0; }
+
+  .skill-pt-badge {
+    font-size: 0.65rem;
+    color: #807890;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  .card.checked .skill-pt-badge { color: #56b87a; }
+</style>
+</head>
+<body>
+
+<!-- TODAY PAGE -->
+<div class="page active" id="page-today">
+  <header>
+    <h1>Habit Quest</h1>
+    <div class="points-display">累計ポイント: <span id="pts">0</span> pt</div>
+    <div class="timer" id="timer">チェックを開始するとタイマーがスタートします</div>
+  </header>
+  <div class="grid" id="grid"></div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar" id="progressBar" style="width:0%"></div>
+  </div>
+  <div class="progress-label" id="progressLabel">0 / 9</div>
+</div>
+
+<!-- DASHBOARD PAGE -->
+<div class="page" id="page-dash">
+  <div class="dash-title">記録</div>
+
+  <div class="stat-row">
+    <div class="stat-card">
+      <div class="stat-value" id="d-streak">0</div>
+      <div class="stat-label">連続全達成日数</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="d-over80">0</div>
+      <div class="stat-label">80点超えた日数</div>
+    </div>
+  </div>
+
+  <div class="chart-wrap">
+    <div class="section-title">スコア推移（直近14日）</div>
+    <div class="bar-chart" id="scoreChart"></div>
+  </div>
+
+</div>
+
+<!-- SKILL PAGE -->
+<div class="page" id="page-skill">
+  <div class="dash-title">スキル別 達成率</div>
+  <div class="chart-wrap">
+    <div class="skill-rate-list" id="skillRates"></div>
+  </div>
+</div>
+
+<!-- CELEBRATION -->
+<div class="celebration" id="celebration">
+  <div class="celebration-text">全達成! +1 ポイント</div>
+  <div class="celebration-sub" id="celebSub"></div>
+  <button class="celebration-btn" onclick="closeCelebration()">次の日へ</button>
+</div>
+
+<!-- TAB BAR -->
+<nav class="tab-bar">
+  <button class="tab-btn active" id="tab-today" onclick="switchTab('today')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+      <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+    </svg>
+    今日
+  </button>
+  <button class="tab-btn" id="tab-dash" onclick="switchTab('dash')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="20" x2="18" y2="10"/>
+      <line x1="12" y1="20" x2="12" y2="4"/>
+      <line x1="6"  y1="20" x2="6"  y2="14"/>
+    </svg>
+    記録
+  </button>
+  <button class="tab-btn" id="tab-skill" onclick="switchTab('skill')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <polyline points="12 6 12 12 16 14"/>
+    </svg>
+    スキル
+  </button>
+</nav>
+
+<script>
+const STORAGE_KEY = 'habitquest_v1';
+const MS_24H = 24 * 60 * 60 * 1000;
+const DEFAULT_SKILLS = ['運動', '瞑想', 'WIG', 'ToDo', 'ジャーナリング', '英語', '四徳五毒', '断捨離', 'リトリート'];
+const DEFAULT_SKILL_POINTS = [12, 12, 10, 12, 12, 12, 10, 10, 10]; // 合計100点
+
+function calcScore(checks, pts) {
+  return checks.reduce((sum, v, i) => sum + (v ? pts[i] : 0), 0);
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const s = JSON.parse(raw);
+      if (!s.history) s.history = [];
+      if (!s.skillPoints) s.skillPoints = [...DEFAULT_SKILL_POINTS];
+      return s;
+    }
+  } catch (_) {}
+  return { skills: [...DEFAULT_SKILLS], skillPoints: [...DEFAULT_SKILL_POINTS], checks: Array(9).fill(false), startTime: null, totalPoints: 0, history: [] };
+}
+
+function saveState(s) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
+}
+
+let state = loadState();
+let timerInterval = null;
+
+// ---- History ----
+
+function getDateStr(ts) {
+  const d = new Date(ts);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function saveDayToHistory() {
+  const completedCount = state.checks.filter(Boolean).length;
+  if (completedCount === 0) return;
+  const score = calcScore(state.checks, state.skillPoints);
+  const dateStr = getDateStr(state.startTime || Date.now());
+  const record = { date: dateStr, checks: [...state.checks], score };
+  const idx = state.history.findIndex(h => h.date === dateStr);
+  if (idx >= 0) {
+    if (score > state.history[idx].score) state.history[idx] = record;
+  } else {
+    state.history.push(record);
+  }
+  state.history.sort((a, b) => a.date.localeCompare(b.date));
+  if (state.history.length > 90) state.history = state.history.slice(-90);
+}
+
+// ---- Reset ----
+
+function resetDaily() {
+  saveDayToHistory();
+  state.checks = Array(9).fill(false);
+  state.startTime = null;
+  saveState(state);
+}
+
+// ---- Grid ----
+
+function buildGrid() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  state.skills.forEach((skill, i) => {
+    const card = document.createElement('div');
+    card.className = 'card' + (state.checks[i] ? ' checked' : '');
+
+    const nameEl = document.createElement('div');
+    nameEl.className = 'skill-name';
+    nameEl.textContent = skill;
+    nameEl.title = 'ダブルクリックで編集';
+    nameEl.addEventListener('dblclick', () => startEdit(i, nameEl, card));
+
+    const badge = document.createElement('div');
+    badge.className = 'skill-pt-badge';
+    badge.textContent = state.skillPoints[i] + 'pt';
+
+    const btn = document.createElement('button');
+    btn.className = 'check-btn';
+    btn.innerHTML = state.checks[i]
+      ? `<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`
+      : `<svg viewBox="0 0 24 24" fill="none" stroke="#6a6aaa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/></svg>`;
+    btn.addEventListener('click', () => toggleCheck(i));
+
+    card.appendChild(nameEl);
+    card.appendChild(badge);
+    card.appendChild(btn);
+    grid.appendChild(card);
+  });
+  updateProgress();
+}
+
+function startEdit(i, nameEl, card) {
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'skill-input';
+  input.value = state.skills[i];
+  input.maxLength = 12;
+  nameEl.replaceWith(input);
+  input.focus();
+  input.select();
+
+  function commit() {
+    const val = input.value.trim() || state.skills[i];
+    state.skills[i] = val;
+    saveState(state);
+    const newName = document.createElement('div');
+    newName.className = 'skill-name';
+    newName.textContent = val;
+    newName.title = 'ダブルクリックで編集';
+    newName.addEventListener('dblclick', () => startEdit(i, newName, card));
+    input.replaceWith(newName);
+  }
+
+  input.addEventListener('blur', commit);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') input.blur();
+    if (e.key === 'Escape') { input.value = state.skills[i]; input.blur(); }
+  });
+}
+
+function toggleCheck(i) {
+  if (state.checks[i]) {
+    state.checks[i] = false;
+    if (state.checks.every(v => !v)) { state.startTime = null; stopTimer(); }
+    saveState(state);
+    buildGrid();
+    return;
+  }
+  if (!state.startTime) { state.startTime = Date.now(); startTimer(); }
+  state.checks[i] = true;
+  saveState(state);
+  buildGrid();
+  if (state.checks.every(v => v)) {
+    if (Date.now() - state.startTime <= MS_24H) {
+      state.totalPoints += 1;
+      saveState(state);
+      showCelebration();
+    }
+  }
+}
+
+function updateProgress() {
+  const score = calcScore(state.checks, state.skillPoints);
+  document.getElementById('progressBar').style.width = score + '%';
+  document.getElementById('progressLabel').textContent = `${score} / 100点`;
+  document.getElementById('pts').textContent = state.totalPoints;
+}
+
+// ---- Timer ----
+
+function startTimer() {
+  stopTimer();
+  timerInterval = setInterval(tickTimer, 1000);
+  tickTimer();
+}
+
+function stopTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  const el = document.getElementById('timer');
+  el.textContent = 'チェックを開始するとタイマーがスタートします';
+  el.className = 'timer';
+}
+
+function tickTimer() {
+  if (!state.startTime) { stopTimer(); return; }
+  const remaining = MS_24H - (Date.now() - state.startTime);
+  if (remaining <= 0) {
+    resetDaily();
+    buildGrid();
+    stopTimer();
+    return;
+  }
+  const h = Math.floor(remaining / 3600000);
+  const m = Math.floor((remaining % 3600000) / 60000);
+  const s = Math.floor((remaining % 60000) / 1000);
+  const pad = n => String(n).padStart(2, '0');
+  const el = document.getElementById('timer');
+  el.textContent = `残り時間: ${pad(h)}:${pad(m)}:${pad(s)}`;
+  el.className = 'timer active' + (remaining < 3600000 ? ' urgent' : '');
+}
+
+// ---- Celebration ----
+
+function showCelebration() {
+  stopTimer();
+  document.getElementById('celebSub').textContent = `累計ポイント: ${state.totalPoints} pt`;
+  document.getElementById('celebration').classList.add('show');
+  spawnConfetti();
+}
+
+function closeCelebration() {
+  document.getElementById('celebration').classList.remove('show');
+  document.querySelectorAll('.confetti-piece').forEach(el => el.remove());
+  resetDaily();
+  buildGrid();
+}
+
+function spawnConfetti() {
+  const colors = ['#f0c040', '#2ecc71', '#00d2ff', '#ff6b9d', '#a29bfe'];
+  for (let i = 0; i < 60; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.left = Math.random() * 100 + 'vw';
+    el.style.background = colors[i % colors.length];
+    el.style.animationDuration = (1.5 + Math.random() * 2) + 's';
+    el.style.animationDelay = (Math.random() * 0.8) + 's';
+    const size = (6 + Math.random() * 8) + 'px';
+    el.style.width = el.style.height = size;
+    document.body.appendChild(el);
+    el.addEventListener('animationend', () => el.remove());
+  }
+}
+
+// ---- Dashboard ----
+
+function buildDashboard() {
+  const history = state.history;
+
+  // Streak: consecutive days ending today with score == 100
+  let streak = 0;
+  const today = getDateStr(Date.now());
+  const allDates = [];
+  const d = new Date();
+  for (let i = 0; i < 90; i++) {
+    allDates.unshift(getDateStr(d.getTime()));
+    d.setDate(d.getDate() - 1);
+  }
+  for (let i = allDates.indexOf(today); i >= 0; i--) {
+    const rec = history.find(h => h.date === allDates[i]);
+    if (rec && rec.score === 100) { streak++; }
+    else break;
+  }
+  document.getElementById('d-streak').textContent = streak;
+
+  // Days with score > 80
+  const over80 = history.filter(h => h.score > 80).length;
+  document.getElementById('d-over80').textContent = over80;
+
+  // Score chart: last 14 days
+  buildScoreChart();
+}
+
+function buildScoreChart() {
+  const chart = document.getElementById('scoreChart');
+  chart.innerHTML = '';
+  const last14 = getLast14Days();
+
+  if (last14.every(d => !d.rec)) {
+    chart.innerHTML = '<div class="no-data" style="width:100%">まだ記録がありません</div>';
+    return;
+  }
+
+  last14.forEach(({ label, rec }) => {
+    const score = rec ? rec.score : 0;
+    const col = document.createElement('div');
+    col.className = 'bar-col';
+
+    const fill = document.createElement('div');
+    fill.className = 'bar-fill';
+    fill.style.height = score + '%';
+    fill.style.background = score === 0
+      ? '#2a2a3a'
+      : score >= 80
+        ? 'linear-gradient(180deg, #2ecc71, #00d2ff)'
+        : 'linear-gradient(180deg, #a29bfe, #6c5ce7)';
+    fill.title = `${label}: ${score}点`;
+
+    const lbl = document.createElement('div');
+    lbl.className = 'bar-label';
+    lbl.textContent = label;
+
+    col.appendChild(fill);
+    col.appendChild(lbl);
+    chart.appendChild(col);
+  });
+}
+
+function buildSkillRates() {
+  const list = document.getElementById('skillRates');
+  list.innerHTML = '';
+  const history = state.history;
+
+  if (history.length === 0) {
+    list.innerHTML = '<div class="no-data">まだ記録がありません</div>';
+    return;
+  }
+
+  state.skills.forEach((name, i) => {
+    const count = history.filter(h => h.checks && h.checks[i]).length;
+    const pct = Math.round((count / history.length) * 100);
+
+    const row = document.createElement('div');
+    row.className = 'skill-rate-row';
+
+    const nameEl = document.createElement('div');
+    nameEl.className = 'skill-rate-name';
+    nameEl.textContent = name;
+    nameEl.title = name;
+
+    const bg = document.createElement('div');
+    bg.className = 'skill-rate-bar-bg';
+    const fill = document.createElement('div');
+    fill.className = 'skill-rate-bar-fill';
+    fill.style.width = pct + '%';
+    bg.appendChild(fill);
+
+    const pctEl = document.createElement('div');
+    pctEl.className = 'skill-rate-pct';
+    pctEl.textContent = pct + '%';
+
+    row.appendChild(nameEl);
+    row.appendChild(bg);
+    row.appendChild(pctEl);
+    list.appendChild(row);
+  });
+}
+
+function getLast14Days() {
+  const result = [];
+  const d = new Date();
+  for (let i = 13; i >= 0; i--) {
+    const t = new Date(d);
+    t.setDate(d.getDate() - i);
+    const dateStr = getDateStr(t.getTime());
+    const label = `${t.getMonth()+1}/${t.getDate()}`;
+    const rec = state.history.find(h => h.date === dateStr) || null;
+    result.push({ dateStr, label, rec });
+  }
+  return result;
+}
+
+// ---- Tab switching ----
+
+function switchTab(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+  if (name === 'dash') buildDashboard();
+  if (name === 'skill') buildSkillRates();
+}
+
+// ---- Init ----
+(function init() {
+  if (state.startTime && (Date.now() - state.startTime > MS_24H)) {
+    resetDaily();
+  }
+  buildGrid();
+  if (state.startTime) startTimer();
+})();
+</script>
+</body>
+</html>
