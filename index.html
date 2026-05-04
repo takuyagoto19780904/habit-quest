@@ -354,6 +354,20 @@
 
   .no-data { color: #404060; font-size: 0.85rem; text-align: center; padding: 20px 0; }
 
+  .reset-btn {
+    margin-top: 20px;
+    width: 100%;
+    padding: 10px;
+    background: transparent;
+    border: 1px solid #3a3a5a;
+    border-radius: 8px;
+    color: #606080;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .reset-btn:hover { border-color: #ff7060; color: #ff7060; }
+
   .skill-pt-badge {
     font-size: 0.65rem;
     color: #807890;
@@ -377,6 +391,7 @@
     <div class="progress-bar" id="progressBar" style="width:0%"></div>
   </div>
   <div class="progress-label" id="progressLabel">0 / 9</div>
+  <button class="reset-btn" id="resetBtn" onclick="manualReset()" style="display:none">セッションを終了する</button>
 </div>
 
 <!-- DASHBOARD PAGE -->
@@ -593,6 +608,15 @@ function updateProgress() {
   document.getElementById('progressBar').style.width = score + '%';
   document.getElementById('progressLabel').textContent = `${score} / 100点`;
   document.getElementById('pts').textContent = state.totalPoints;
+  const hasAnyCheck = state.checks.some(v => v);
+  document.getElementById('resetBtn').style.display = hasAnyCheck ? 'block' : 'none';
+}
+
+function manualReset() {
+  if (!confirm('今日のセッションを終了しますか？\n現在の進捗を記録してリセットします。')) return;
+  resetDaily();
+  buildGrid();
+  stopTimer();
 }
 
 // ---- Timer ----
