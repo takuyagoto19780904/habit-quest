@@ -354,6 +354,51 @@
 
   .no-data { color: #404060; font-size: 0.85rem; text-align: center; padding: 20px 0; }
 
+  /* ---- SHITOKU GODOKU PAGE ---- */
+  .shitoku-section-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: #606080;
+    margin-bottom: 10px;
+  }
+
+  .shitoku-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 4px; }
+
+  .shitoku-card {
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .shitoku-card.virtue {
+    background: #12221a;
+    border-left: 3px solid #2ecc71;
+  }
+
+  .shitoku-card.vice {
+    background: #1e1220;
+    border-left: 3px solid #a29bfe;
+  }
+
+  .shitoku-keyword {
+    font-size: 0.95rem;
+    font-weight: 700;
+    min-width: 36px;
+    flex-shrink: 0;
+  }
+
+  .shitoku-card.virtue .shitoku-keyword { color: #2ecc71; }
+  .shitoku-card.vice  .shitoku-keyword { color: #a29bfe; }
+
+  .shitoku-body {
+    font-size: 0.85rem;
+    color: #b0b0c8;
+    line-height: 1.6;
+  }
+
   .reset-btn {
     margin-top: 20px;
     width: 100%;
@@ -424,6 +469,55 @@
   </div>
 </div>
 
+<!-- SHITOKU GODOKU PAGE -->
+<div class="page" id="page-shitoku">
+  <div class="dash-title">四徳五毒</div>
+
+  <div class="shitoku-section-label">四徳</div>
+  <div class="shitoku-list">
+    <div class="shitoku-card virtue">
+      <div class="shitoku-keyword">智恵</div>
+      <div class="shitoku-body">うわべにとらわれず、本質的なことに時間とエネルギーを使おう</div>
+    </div>
+    <div class="shitoku-card virtue">
+      <div class="shitoku-keyword">正義</div>
+      <div class="shitoku-body">自己中心的な態度を取らず、他人を思いやろう</div>
+    </div>
+    <div class="shitoku-card virtue">
+      <div class="shitoku-keyword">勇気</div>
+      <div class="shitoku-body">味方がいなくても苦難に立ち向かおう</div>
+    </div>
+    <div class="shitoku-card virtue">
+      <div class="shitoku-keyword">節制</div>
+      <div class="shitoku-body">衝動をコントロールして表層的な誘惑から内面の充実に目を向けよう</div>
+    </div>
+  </div>
+
+  <div class="shitoku-section-label" style="margin-top:24px">五毒</div>
+  <div class="shitoku-list">
+    <div class="shitoku-card vice">
+      <div class="shitoku-keyword">食欲</div>
+      <div class="shitoku-body">甘味や間食に惑わされていないか？代用品で済ませよう</div>
+    </div>
+    <div class="shitoku-card vice">
+      <div class="shitoku-keyword">嫉妬</div>
+      <div class="shitoku-body">誰かを羨んでいないか？その能力を素直に認めよう</div>
+    </div>
+    <div class="shitoku-card vice">
+      <div class="shitoku-keyword">憤怒</div>
+      <div class="shitoku-body">恐れから怒りを出していないか？感情を離れて見つめよう</div>
+    </div>
+    <div class="shitoku-card vice">
+      <div class="shitoku-keyword">傲慢</div>
+      <div class="shitoku-body">自分を特別視していないか？実りてこそ頭を垂れる稲穂かな</div>
+    </div>
+    <div class="shitoku-card vice">
+      <div class="shitoku-keyword">色欲</div>
+      <div class="shitoku-body">扁桃体に衝動をコントロールされていないか？感情を離れて見つめよう</div>
+    </div>
+  </div>
+</div>
+
 <!-- CELEBRATION -->
 <div class="celebration" id="celebration">
   <div class="celebration-text">全達成! +1 ポイント</div>
@@ -454,6 +548,14 @@
       <polyline points="12 6 12 12 16 14"/>
     </svg>
     スキル
+  </button>
+  <button class="tab-btn" id="tab-shitoku" onclick="switchTab('shitoku')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+      <path d="M2 17l10 5 10-5"/>
+      <path d="M2 12l10 5 10-5"/>
+    </svg>
+    四徳五毒
   </button>
 </nav>
 
